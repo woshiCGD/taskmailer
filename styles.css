@@ -1,0 +1,127 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f0f0f0;
+}
+
+.container {
+    width: 80%;
+    height: 60%;
+    background-color: white;
+    border: 2px solid black;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+}
+
+.hi-btn {
+    background-color: black;
+    color: white;
+    font-size: 18px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    margin-bottom: 10%; /* 修改为 margin-bottom 而非 margin-top */
+}
+
+.input-field {
+    width: 80%; /* 将宽度改为占外框的80% */
+    height: 80%;
+    border: 2px solid gray;
+    border-radius: 5px;
+    padding: 10px;
+    font-size: 16px;
+    margin-bottom: 10%;
+}
+
+.action-buttons {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.left-btn,
+.right-btn {
+    background-color: white;
+    color: black;
+    font-size: 18px;
+    padding: 10px 20px;
+    border: 2px solid black;
+    border-radius: 5px;
+}
+
+
+input[type='checkbox']{
+    display: none;
+}
+
+#display:checked ~ .login-card {
+    display: block;
+}
+
+.login-card {
+    display: none;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    background: whitesmoke;
+    width: 350px;
+    height: 300px;
+    padding: 30px;
+    position: absolute;
+    border-radius: 15px;
+    opacity: 70%;
+}
+
+form {
+    background: none;
+}
+
+label {
+    background: none;
+    color: black;
+    font-weight: bold;
+    font-size: 20px;
+}
+
+input {
+    background: none;
+    display: block;
+    width: 90%;
+    font-size: 20px;
+    border: none;
+    outline: none;
+    border-bottom: 2px solid black;
+    padding: 10px;
+}
+
+.login-button {
+    display: block;
+    margin-top: 20px;
+    width: 95%;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 20px;
+    border-radius: 10px;
+    background: black;
+    border: none;
+    outline: none;
+    padding: 10px;
+    transition: 0.3s;
+}
+
+.ai-disabled {
+    opacity: 0.5; /* 调整透明度以显示禁用 */
+    cursor: not-allowed; /* 更改光标形状为禁止符号 */
+  }

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>【TaskMailer】</title>
+</head>
+
+<body>
+    <div class="container">
+        <!-- 登录卡片 -->
+        <input type="checkbox" id="display">
+
+        <label for="display" class="hi-btn">Hi</label>
+
+        <div class="login-card">
+            <form>
+                <label>电子邮箱/电话号码</label>
+                <input type="text" id="emailInput">
+
+                <label>密码</label>
+                <input type="password" id="passwordInput">
+
+                <button class="login-button" type="button">OK</button>
+            </form>
+        </div>
+        <!-- end 登录卡片 -->
+        <textarea type="text" class="input-field" placeholder="在此输入..."></textarea>
+        <div class="action-buttons">
+            <button class="left-btn">AI</button>
+            <button class="right-btn">OK</button>
+        </div>
+    </div>
+
+    <script>
+        // 常量
+        let isAIBlocked = false; // 用于标记AI按钮是否被禁用
+        const loginButton = document.querySelector('.login-button');
+        const aiButton = document.querySelector('.left-btn');
+
+        // 登录
+        loginButton.addEventListener('click', async function () {
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+            const displayCheckbox = document.getElementById('display');
+
+            fetch('https://118.31.15.77:8080/do/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    email: email,
+                    password: password
+                })
+            })
+                .then(reponse => reponse.json())
+                .then(data => {
+                    if (data.code === "200") {
+                        // 存储token到localStorage或cookie
+                        localStorage.setItem('userToken', data.result.token);
+                        alert("登录成功");
+                    } else {
+                        alert(data.message);
+                    }
+                    // 不论登录是否成功，都清空输入框内容
+                    emailInput.value = '';
+                    passwordInput.value = '';
+
+                    // 隐藏登录卡片（模拟点击“Hi”按钮）
+                    displayCheckbox.checked = false;
+                })
+                .catch(error => console.error('请求错误:', error));
+        });
+
+        // AI识别
+        aiButton.addEventListener('click', async function () {
+            if (isAIBlocked) return;
+            aiButton.classList.add("ai-disabled");
+
+            const taskInput = document.querySelector('.input-field');
+            const userToken = localStorage.getItem('userToken');
+
+            if (!userToken) {
+                alert("请先登录");
+                return;
+            }
+
+            const task = taskInput.value.trim();
+            if (!task) {
+                alert("请输入任务信息");
+                return;
+            }
+
+            aiButton.disabled = true;
+            isAIBlocked = true;
+
+            fetch('https://118.31.15.77:8080/do/recognition', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'token': userToken
+                },
+                body: JSON.stringify({
+                    task: task
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === "200") {
+                        const result = data.result;
+                        taskInput.value = `任务: ${result.task}\n时间: ${result.time}\n级别: ${result.level}`;
+                        aiButton.disabled = true;
+                        isAIBlocked = true;
+                        aiButton.classList.add("ai-disabled");
+                    } else {
+                        alert(data.message);
+                        aiButton.disabled = false;
+                        isAIBlocked = false;
+                        aiButton.classList.remove("ai-disabled");
+                        taskInput.value = ''
+                    }
+                })
+                .catch(error => {
+                    console.error('请求错误:', error);
+                    aiButton.disabled = false;
+                    isAIBlocked = false;
+                    aiButton.classList.remove("ai-disabled");
+                    taskInput.value = ''
+                }
+                );
+        });
+
+        // 提交任务
+        document.querySelector('.right-btn').addEventListener('click', async function () {
+            aiButton.disabled = false;
+            isAIBlocked = false;
+            aiButton.classList.remove("ai-disabled");
+            
+            const taskInputArea = document.querySelector('.input-field');
+            const taskInput = taskInputArea.value;
+
+            // 按照行分隔任务输入内容
+            const lines = taskInput.split('\n');
+
+            // 定义一个空对象用于存储结果
+            const taskInfo = {};
+
+            // 通过键值对处理每一行
+            lines.forEach(line => {
+                const [key, value] = line.split(': ');
+                switch (key) {
+                    case '任务':
+                    taskInfo.task = value;
+                        break;
+                    case '时间':
+                    taskInfo.time = value;
+                        break;
+                    case '级别':
+                    taskInfo.level = parseInt(value, 10);
+                        break;
+                }
+            });
+
+            const userToken = localStorage.getItem('userToken');
+
+            if (!userToken) {
+                alert("请先登录");
+                return;
+            }
+
+            // 获取AI请求成功后的任务信息
+            if (!taskInfo || !taskInfo.task || !taskInfo.time || !taskInfo.level) {
+                alert("任务信息有误")
+                return; // 确保有完整的任务信息
+            }
+
+            // 构造新的POST请求选项
+            const pushTaskOptions = {
+                method: 'POST',
+                headers: {
+                    'token': userToken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    task: taskInfo.task,
+                    time: taskInfo.time,
+                    level: taskInfo.level
+                })
+            };
+
+            fetch('https://118.31.15.77:8080/do/pushTask', pushTaskOptions)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === "200") {
+                        taskInputArea.value = '';
+                        alert("任务推送成功");
+
+                    } else {
+                        alert("任务推送失败：" + data.message);
+                        taskInputArea.value = ''
+                    }
+                })
+                .catch(error => {
+                    alert('任务推送请求错误:' + error);
+                    taskInputArea.value = ''
+                });
+        });
+
+    </script>
+</body>
+
+</html>
